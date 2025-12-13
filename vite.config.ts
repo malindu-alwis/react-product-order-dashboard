@@ -7,4 +7,10 @@ export default defineConfig({
   optimizeDeps: {
     include: ['@reduxjs/toolkit'],
   },
+  test: {
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/setupTests.ts",
+  },
+  
 });
