@@ -12,8 +12,8 @@ import {
 } from "@mui/material";
 import { MoreHoriz } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchOrders, updateOrderStatus } from "../../redux/ordersSlice";
-import OrderStatusBadge from "../../components/orders/OrderStatusBadge";
+import { fetchOrders, updateOrderStatus } from "../../features/orders/ordersSlice";
+import OrderStatusBadge from "../../components/common/OrderStatusBadge";
 import UnifiedFilters from "../../components/filters/UnifiedFilters";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 import ErrorFallback from "../../components/common/ErrorFallback";

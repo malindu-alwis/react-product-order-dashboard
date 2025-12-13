@@ -15,7 +15,7 @@ import {
 import { ArrowBack, Add, Remove, Save, Inventory2 } from "@mui/icons-material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProductById, updateProductStockOrStatus } from "../../redux/productsSlice";
+import { fetchProductById, updateProductStockOrStatus } from "../../features/products/productsSlice";
 import ConfirmationDialog from "../../components/common/ConfirmationDialog";
 import ErrorFallback from "../../components/common/ErrorFallback";
 import type { AppDispatch, RootState } from "../../redux/store";

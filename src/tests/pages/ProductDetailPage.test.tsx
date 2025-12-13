@@ -1,8 +1,8 @@
 import { test, expect, vi } from "vitest";
 import { screen, fireEvent } from "@testing-library/react";
-import { renderWithProviders } from "./test-utils";
-import ProductDetailPage from "../pages/products/ProductDetailsPage";
-import type { Product } from "../types/Product";
+import { renderWithProviders } from "../test-utils";
+import ProductDetailPage from "../../pages/products/ProductDetailsPage";
+import type { Product } from "../../types/Product";
 
 
 vi.mock("react-router-dom", async () => {

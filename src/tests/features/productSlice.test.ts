@@ -2,8 +2,8 @@ import { test, expect, describe } from "vitest";
 import productReducer, {
   fetchProducts,
   updateProductStockOrStatus,
-} from "../redux/productsSlice";
-import { products } from "../mocks/data/products";
+} from "../../features/products/productsSlice";
+import { products } from "../../mocks/data/products";
 
 describe("productSlice reducer", () => {
   test("should return initial state", () => {

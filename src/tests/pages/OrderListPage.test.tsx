@@ -1,7 +1,7 @@
 import { test, expect, vi } from "vitest";
-import { renderWithProviders } from "./test-utils";
+import { renderWithProviders } from "../test-utils";
 import { screen } from "@testing-library/react";
-import OrderListPage from "../pages/orders/OrderListPage";
+import OrderListPage from "../../pages/orders/OrderListPage";
 
 const mockOrders = [
   {

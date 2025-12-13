@@ -8,7 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
 import UnifiedFilters from "../../components/filters/UnifiedFilters";
 import ErrorFallback from "../../components/common/ErrorFallback";
-import { fetchProducts } from "../../redux/productsSlice";
+import { fetchProducts } from "../../features/products/productsSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 
 function ProductListPage() {

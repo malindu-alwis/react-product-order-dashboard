@@ -58,17 +58,18 @@ with filtering, pagination, and status management features.
 The project follows a clear and maintainable structure designed for scalability:
 
 src/
-├── components/   # Reusable UI components
-├── features/     # Redux slices & selectors
-├── pages/        # Route-level pages
-├── services/     # API layer
-├── mocks/        # MSW mock server & data
-├── tests/        # Unit & integration tests
-├── layout/       # App layout (sidebar, wrappers)
-├── redux/        # Store configuration
-├── theme/        # MUI theme & dark/light mode
-├── types/        # Shared TypeScript types
-└── assets/       # Images & static files
+├── app/              # Application bootstrap and routing
+├── redux/            # Redux store configuration only
+├── features/         # Domain-based Redux logic
+├── services/         # API layer and HTTP clients
+├── pages/            # Route-level screens
+├── components/       # Reusable presentational components
+├── hooks/            # Reusable hooks and typed Redux hooks
+├── layout/           # Application shell (sidebar, topbar)
+├── theme/            # MUI theme and dark/light mode
+├── mocks/            # MSW mock server and handlers
+├── tests/            # Unit and integration tests
+└── assets/           # Static assets
 
 
 ## State Management
