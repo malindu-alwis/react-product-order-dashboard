@@ -1,73 +1,110 @@
-# React + TypeScript + Vite
+# Inventory & Order Management Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Overview
+This project is a mid-scale React application built as part of a Senior Software Engineer
+technical assessment. It demonstrates real-world frontend architecture, state management,
+API integration, and testing practices commonly used in production React applications.
 
-Currently, two official plugins are available:
+The application allows managing products and orders through a clean, responsive dashboard
+with filtering, pagination, and status management features.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Key Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Product Management
+- Product list displayed using Material UI DataGrid
+- Search by product name
+- Filter by category
+- Filter by price range
+- Client-side pagination with justification for mid-scale datasets
+- Product detail page with:
+  - Full product information
+  - Stock quantity update
+  - Active / inactive status toggle
+  - PATCH-based update flow
 
-## Expanding the ESLint configuration
+### Order Management
+- Orders fetched from a separate API endpoint
+- Table view with sorting and filtering
+- Status badges for:
+  - Pending
+  - Shipped
+  - Delivered
+  - Cancelled
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### UI / UX
+- Consistent layout with top navigation bar
+- Reusable UI components
+- Dark / light mode toggle
+- Snackbar notifications for success and error states
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+---
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Tech Stack
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **React 18 + TypeScript**
+- **Redux Toolkit** (state management)
+- **Redux Async Thunks** (API calls)
+- **Material UI (MUI)** for UI components
+- **React Router v6**
+- **MSW (Mock Service Worker)** for API mocking
+- **Jest + React Testing Library** for testing
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Project Structure
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+The project follows a clear and maintainable structure designed for scalability:
+
+src/
+├── components/   # Reusable UI components
+├── features/     # Redux slices & selectors
+├── pages/        # Route-level pages
+├── services/     # API layer
+├── mocks/        # MSW mock server & data
+├── tests/        # Unit & integration tests
+├── layout/       # App layout (sidebar, wrappers)
+├── redux/        # Store configuration
+├── theme/        # MUI theme & dark/light mode
+├── types/        # Shared TypeScript types
+└── assets/       # Images & static files
+
+
+## State Management
+
+- Redux Toolkit slices manage **products** and **orders**
+- Async thunks handle all API communication
+- Selectors are used for derived state (filters, pagination)
+- UI components remain mostly stateless and declarative
+
+---
+
+## API Strategy
+
+- Axios is used through a centralized API client
+- All network calls are isolated in the `services/` layer
+- MSW simulates backend APIs during development and testing
+- This allows realistic async behavior without relying on a real backend
+
+---
+
+## Testing Strategy
+
+The project includes both unit and integration tests:
+
+- Redux slice logic tests
+- Async thunk behavior tests
+- Page-level integration tests with MSW
+- User interaction tests using React Testing Library
+
+Testing focuses on **behavior**, not implementation details.
+
+---
+
+## Running the Project
+
+```bash
+npm install
+npm run dev
+npm test
