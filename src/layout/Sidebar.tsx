@@ -44,7 +44,7 @@ function Sidebar() {
           <InventoryIcon sx={{ color: "#fff" }} />
         </Box>
         <Typography variant="h6" fontWeight={700}>
-          Inventory 
+          Assesment 
         </Typography>
       </Box>
 

@@ -1,37 +1,50 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Box, Typography, Chip, IconButton, Avatar } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Box, Typography, Chip, IconButton, Avatar, CircularProgress } from "@mui/material";
 import InventoryIcon from "@mui/icons-material/Inventory2";
 import StarIcon from "@mui/icons-material/Star";
+import { Edit } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { DataGrid, type GridColDef } from "@mui/x-data-grid";
-import ProductFilters from "../../components/products/ProductFilters";
+import UnifiedFilters from "../../components/filters/UnifiedFilters";
+import ErrorFallback from "../../components/common/ErrorFallback";
 import { fetchProducts } from "../../redux/productsSlice";
 import type { AppDispatch, RootState } from "../../redux/store";
 
-
-export default function ProductListPage() {
+function ProductListPage() {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { items, loading } = useSelector((s: RootState) => s.products);
+  const { items, loading, error } = useSelector((s: RootState) => s.products);
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [priceRange, setPriceRange] = useState([0, 3000]);
 
+  const loadProducts = () => {
+    dispatch(fetchProducts({ name: search, category, minPrice: priceRange[0], maxPrice: priceRange[1] }));
+  };
+
   useEffect(() => {
     const id = setTimeout(() => {
-      dispatch(fetchProducts({ name: search, category, minPrice: priceRange[0], maxPrice: priceRange[1] }));
+      loadProducts();
     }, 400);
-  
     return () => clearTimeout(id);
   }, [search, category, priceRange, dispatch]);
 
-  const categories = useMemo(
-    () => Array.from(new Set(items.map((p) => p.category))),
+  const categoryOptions = useMemo(
+    () =>
+      Array.from(new Set(items.map((p) => p.category))).map((c) => ({
+        label: c,
+        value: c,
+      })),
     [items]
   );
+
+  const handleReset = () => {
+    setSearch("");
+    setCategory("");
+    setPriceRange([0, 3000]);
+  };
 
   const columns: GridColDef[] = [
     {
@@ -41,12 +54,10 @@ export default function ProductListPage() {
       minWidth: 250,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={2}>
-          <Avatar
-            src={params.row.image}
-            variant="rounded"
-            sx={{ width: 44, height: 44 }}
-          />
-          <Typography fontWeight={500}>{params.value}</Typography>
+          <Avatar src={params.row.image} variant="rounded" sx={{ width: 44, height: 44 }} />
+          <Typography fontWeight={500} color="primary.main">
+            {params.value}
+          </Typography>
         </Box>
       ),
     },
@@ -54,9 +65,7 @@ export default function ProductListPage() {
       field: "price",
       headerName: "Price",
       width: 120,
-      renderCell: (params) => (
-        <Typography fontWeight={500}>${params.value}</Typography>
-      ),
+      renderCell: (params) => <Typography variant="body2">${params.value}</Typography>,
     },
     {
       field: "stock",
@@ -64,8 +73,8 @@ export default function ProductListPage() {
       width: 120,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={1}>
-          <InventoryIcon sx={{ fontSize: 16, color: "text.secondary" }} />
-          <Typography>{params.value}</Typography>
+          <InventoryIcon sx={{ fontSize: 14, color: "text.secondary" }} />
+          <Typography variant="body2">{params.value}</Typography>
         </Box>
       ),
     },
@@ -75,8 +84,8 @@ export default function ProductListPage() {
       width: 140,
       renderCell: (params) => (
         <Box display="flex" alignItems="center" gap={0.5}>
-          <StarIcon sx={{ fontSize: 16, color: "#facc15" }} />
-          <Typography>{params.value}</Typography>
+          <StarIcon sx={{ fontSize: 14, color: "#facc15" }} />
+          <Typography variant="body2">{params.value}</Typography>
         </Box>
       ),
     },
@@ -89,21 +98,13 @@ export default function ProductListPage() {
           <Chip
             label="Active"
             size="small"
-            sx={{
-              backgroundColor: "#dcfce7",
-              color: "#16a34a",
-              fontWeight: 500,
-            }}
+            sx={{ backgroundColor: "#dcfce7", color: "#16a34a", fontWeight: 500 }}
           />
         ) : (
           <Chip
             label="Inactive"
             size="small"
-            sx={{
-              backgroundColor: "#fee2e2",
-              color: "#dc2626",
-              fontWeight: 500,
-            }}
+            sx={{ backgroundColor: "#fee2e2", color: "#dc2626", fontWeight: 500 }}
           />
         ),
     },
@@ -118,11 +119,27 @@ export default function ProductListPage() {
           onClick={() => navigate(`/products/${params.row.id}`)}
           sx={{ color: "text.secondary" }}
         >
-          <VisibilityIcon fontSize="small" />
+          <Edit fontSize="small" />
         </IconButton>
       ),
     },
   ];
+
+  if (error && items.length === 0) {
+    return (
+      <Box>
+        <Typography variant="h5" fontWeight={700} mb={3}>
+          Products
+        </Typography>
+        <ErrorFallback
+          type="error"
+          title="Failed to load products"
+          message={error}
+          onRetry={loadProducts}
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -132,55 +149,63 @@ export default function ProductListPage() {
         </Typography>
       </Box>
 
-      <ProductFilters
+      <UnifiedFilters
         search={search}
-        category={category}
-        priceRange={priceRange}
-        categories={categories}
         onSearchChange={setSearch}
-        onCategoryChange={setCategory}
+        searchPlaceholder="Search products..."
+        dropdownValue={category}
+        onDropdownChange={setCategory}
+        dropdownLabel="Category"
+        dropdownOptions={categoryOptions}
+        showPriceRange
+        priceRange={priceRange}
         onPriceChange={setPriceRange}
-        onClear={() => {
-          setSearch("");
-          setCategory("");
-          setPriceRange([0, 3000]);
-        }}
+        priceMin={0}
+        priceMax={3000}
+        showReset
+        onReset={handleReset}
       />
 
       <Typography color="text.secondary" mb={2}>
         Showing {items.length} products
       </Typography>
 
-      <Box
-        sx={{
-          height: 520,
-          "& .MuiDataGrid-root": {
-            border: "none",
-            backgroundColor: "background.paper",
-            borderRadius: 3,
-          },
-          "& .MuiDataGrid-columnHeaders": {
-            backgroundColor: "background.default",
-            borderRadius: "12px 12px 0 0",
-          },
-          "& .MuiDataGrid-cell": {
-            display: "flex",
-            alignItems: "center",
-          },
-        }}
-      >
+      {loading ? (
+        <Box display="flex" justifyContent="center" py={6}>
+          <CircularProgress />
+        </Box>
+      ) : items.length === 0 ? (
+        <ErrorFallback
+          type="empty"
+          title="No products found"
+          message="There are no products matching your filters. Try adjusting your search criteria."
+          onRetry={handleReset}
+          retryLabel="Clear Filters"
+        />
+      ) : (
         <DataGrid
           rows={items}
           columns={columns}
-          loading={loading}
           pageSizeOptions={[8, 16]}
-          initialState={{
-            pagination: { paginationModel: { pageSize: 8 } },
-          }}
+          initialState={{ pagination: { paginationModel: { pageSize: 8 } } }}
           disableRowSelectionOnClick
-          sx={{ borderRadius: 3 }}
+          autoHeight
+          sx={{
+            border: "1px solid #e0e0e0",
+            borderRadius: 2,
+            "& .MuiDataGrid-columnHeaders": {
+              backgroundColor: "#f9fafb",
+              fontWeight: 600,
+              color: "text.secondary",
+            },
+            "& .MuiDataGrid-columnHeaderTitle": { fontWeight: 600 },
+            "& .MuiDataGrid-cell": { display: "flex", alignItems: "center" },
+            "& .MuiDataGrid-row:hover": { backgroundColor: "#f9fafb" },
+          }}
         />
-      </Box>
+      )}
     </Box>
   );
 }
+
+export default ProductListPage;

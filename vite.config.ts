@@ -1,16 +1,22 @@
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+import { defineConfig } from "vitest/config";
+import react from "@vitejs/plugin-react";
+import path from "path";
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
   optimizeDeps: {
-    include: ['@reduxjs/toolkit'],
+    include: ["@reduxjs/toolkit"],
+  },  
+  resolve: {
+    alias: {
+      '\\.css$': path.resolve(__dirname, 'src/tests/styleMock.js'),
+    },
   },
   test: {
-    globals: true,
     environment: "jsdom",
-    setupFiles: "./src/setupTests.ts",
+    setupFiles: "src/tests/setupTests.ts",
+    globals: true,
+    css: false,
+    
   },
-  
 });

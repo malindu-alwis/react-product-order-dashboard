@@ -3,7 +3,6 @@ import { orders } from "./data/orders";
 import { http, HttpResponse } from "msw";
 
 export const handlers = [
-  // PRODUCTS (with filters)
   http.get("/api/products", ({ request }) => {
     const url = new URL(request.url);
 

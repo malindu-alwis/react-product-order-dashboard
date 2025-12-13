@@ -3,6 +3,7 @@ import DashboardLayout from "./layout/DashboardLayout";
 import ProductListPage from "./pages/products/ProductListPage";
 import ProductDetailPage from "./pages/products/ProductDetailsPage";
 import OrderListPage from "./pages/orders/OrderListPage";
+import "./App.css"
 
 
 function App() {

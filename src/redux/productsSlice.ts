@@ -40,14 +40,11 @@ const productSlice = createSlice({
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // Fetch all
     builder.addCase(fetchProducts.pending, (state) => {
       state.loading = true;
       state.error = null;
     });
-    builder.addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-      console.log(action.payload);
-      
+    builder.addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {  
       state.items = action.payload;
       state.loading = false;
     });
@@ -56,7 +53,6 @@ const productSlice = createSlice({
       state.error = action.error.message || "Error fetching products";
     });
 
-    // Update product
     builder.addCase(updateProductStockOrStatus.fulfilled, (state, action: PayloadAction<Product>) => {
       const index = state.items.findIndex(p => p.id === action.payload.id);
       if (index !== -1) state.items[index] = action.payload;

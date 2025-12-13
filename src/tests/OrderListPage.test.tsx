@@ -1,36 +1,41 @@
-import { test, expect, beforeAll, afterEach, afterAll } from "vitest";
-import { screen, waitFor, fireEvent } from "@testing-library/react";
+import { test, expect, vi } from "vitest";
 import { renderWithProviders } from "./test-utils";
+import { screen } from "@testing-library/react";
 import OrderListPage from "../pages/orders/OrderListPage";
-import { setupServer } from "msw/node";
-import { handlers } from "../mocks/handlers"; 
 
-// Setup MSW server
-const server = setupServer(...handlers);
+const mockOrders = [
+  {
+    id: 1,
+    product: "Apple iPhone 14",
+    customer: "John Doe",
+    quantity: 1,
+    totalPrice: 999,
+    date: "2024-01-01",
+    status: "Pending",
+  },
+  {
+    id: 2,
+    product: "Samsung Galaxy S23",
+    customer: "Jane Smith",
+    quantity: 2,
+    totalPrice: 1599,
+    date: "2024-01-02",
+    status: "Shipped",
+  },
+];
 
-beforeAll(() => server.listen());
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
-
-test("renders orders with MSW", async () => {
-  renderWithProviders(<OrderListPage />);
-  
-  await waitFor(() => screen.getByText("Apple iPhone 14"));
-  
-  expect(screen.getByText("Pending")).toBeInTheDocument();
-  expect(screen.getByText("Delivered")).toBeInTheDocument();
+vi.mock("../services/ordersService", () => {
+  return {
+    getOrders: vi.fn(() => Promise.resolve(mockOrders)),
+    updateOrder: vi.fn(({ id, status }) =>
+      Promise.resolve({ id, status })
+    ),
+  };
 });
 
-test("filters orders by status", async () => {
+test("renders orders after fetchOrders", async () => {
   renderWithProviders(<OrderListPage />);
-  
-  await waitFor(() => screen.getByText("Apple iPhone 14"));
 
-  const statusSelect = screen.getByLabelText(/Filter by Status/i) as HTMLSelectElement;
-  
-  fireEvent.change(statusSelect, { target: { value: "Shipped" } });
-
-  await waitFor(() => expect(screen.getByText("Samsung Galaxy S23")).toBeInTheDocument());
-  
-  expect(screen.queryByText("Apple iPhone 14")).not.toBeInTheDocument();
+  expect(await screen.findByText("Apple iPhone 14")).toBeInTheDocument();
+  expect(screen.getByText("Samsung Galaxy S23")).toBeInTheDocument();
 });

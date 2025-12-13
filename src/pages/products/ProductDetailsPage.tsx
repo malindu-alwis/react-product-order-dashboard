@@ -10,52 +10,140 @@ import {
   Paper,
   Snackbar,
   Alert,
-  Rating
+  Rating,
 } from "@mui/material";
 import { ArrowBack, Add, Remove, Save, Inventory2 } from "@mui/icons-material";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchProductById,
-  updateProductStockOrStatus
-} from "../../redux/productsSlice";
+import { fetchProductById, updateProductStockOrStatus } from "../../redux/productsSlice";
+import ConfirmationDialog from "../../components/common/ConfirmationDialog";
+import ErrorFallback from "../../components/common/ErrorFallback";
 import type { AppDispatch, RootState } from "../../redux/store";
 
 function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { items, loading } = useSelector((state: RootState) => state.products);
+  const { items, loading, error } = useSelector((state: RootState) => state.products);
+
   const [stock, setStock] = useState<number>(0);
   const [active, setActive] = useState<boolean>(true);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({ open: false, message: "", severity: "success" });
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({ open: false, message: "", severity: "success" });
 
   const product = items.find((p) => p.id === Number(id));
 
+  const loadProduct = () => {
+    dispatch(fetchProductById(Number(id)));
+  };
+
   useEffect(() => {
     if (!product) {
-      dispatch(fetchProductById(Number(id)));
+      loadProduct();
     } else {
       setStock(product.stock);
       setActive(product.active);
     }
   }, [dispatch, id, product]);
 
-  if (loading && !product) return <CircularProgress />;
-  if (!product) return <Typography>Product not found</Typography>;
+  const handleSaveClick = () => {
+    setConfirmOpen(true);
+  };
 
-  const handleSubmit = async () => {
+  const handleConfirmSave = async () => {
+    if (!product) return;
+    setSaving(true);
     try {
-      await dispatch(updateProductStockOrStatus({ id: product.id, data: { stock, active } })).unwrap();
+      await dispatch(
+        updateProductStockOrStatus({ id: product.id, data: { stock, active } })
+      ).unwrap();
       setSnackbar({ open: true, message: "Product updated successfully", severity: "success" });
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Update failed";
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Update failed";
       setSnackbar({ open: true, message, severity: "error" });
+    } finally {
+      setSaving(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  const handleCloseConfirmDialog = () => {
+    if (!saving) {
+      setConfirmOpen(false);
     }
   };
 
   const handleIncrement = () => setStock((prev) => prev + 1);
   const handleDecrement = () => setStock((prev) => Math.max(0, prev - 1));
+
+  const getConfirmationMessage = () => {
+    if (!product) return "";
+    const changes: string[] = [];
+    if (stock !== product.stock) {
+      changes.push(`Stock: ${product.stock} → ${stock}`);
+    }
+    if (active !== product.active) {
+      changes.push(`Status: ${product.active ? "Active" : "Inactive"} → ${active ? "Active" : "Inactive"}`);
+    }
+    if (changes.length === 0) {
+      return "No changes detected. Do you still want to proceed?";
+    }
+    return `Are you sure you want to apply the following changes?\n\n${changes.join("\n")}`;
+  };
+
+
+  if (loading && !product) {
+    return (
+      <Box sx={{ p: 3, display: "flex", justifyContent: "center", alignItems: "center", minHeight: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+
+  if (error && !product) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/products")}
+          sx={{
+            color: "#1a365d",
+            textTransform: "none",
+            mb: 3,
+            "&:hover": { backgroundColor: "transparent", textDecoration: "underline" },
+          }}
+        >
+          Back to Products
+        </Button>
+        <ErrorFallback
+          type="error"
+          title="Failed to load product"
+          message={error}
+          onRetry={loadProduct}
+        />
+      </Box>
+    );
+  }
+
+  if (!product) {
+    return (
+      <Box sx={{ p: 3 }}>
+        <ErrorFallback
+          type="empty"
+          title="Product not found"
+          message="The product you're looking for doesn't exist or has been removed."
+          onRetry={() => navigate("/products")}
+          retryLabel="Back to Products"
+        />
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 3 }}>
@@ -66,14 +154,14 @@ function ProductDetailPage() {
           color: "#1a365d",
           textTransform: "none",
           mb: 3,
-          "&:hover": { backgroundColor: "transparent", textDecoration: "underline" }
+          "&:hover": { backgroundColor: "transparent", textDecoration: "underline" },
         }}
       >
         Back to Products
       </Button>
 
       <Box sx={{ display: "flex", gap: "100px", flexWrap: { xs: "wrap", md: "nowrap" } }}>
-        <Box sx={{ flex: 1, width: { xs: "100%", md: 420 }  }}>
+        <Box sx={{ flex: 1, width: { xs: "100%", md: 420 } }}>
           <Box
             component="img"
             src={product.image}
@@ -83,7 +171,6 @@ function ProductDetailPage() {
               height: 500,
               objectFit: "cover",
               borderRadius: 2,
-              
             }}
           />
         </Box>
@@ -91,12 +178,12 @@ function ProductDetailPage() {
         <Box sx={{ flex: 1 }}>
           <Typography
             sx={{
-              color: "#38a89d",
+              color: "#425bdb",
               fontWeight: 600,
               fontSize: "0.75rem",
               letterSpacing: "0.1em",
               textTransform: "uppercase",
-              mb: 1
+              mb: 1,
             }}
           >
             {product.category}
@@ -109,7 +196,6 @@ function ProductDetailPage() {
           <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
             <Rating value={product.rating} precision={0.1} readOnly sx={{ color: "#f6ad55" }} />
             <Typography sx={{ fontWeight: 600, color: "#1a202c" }}>{product.rating}</Typography>
-            
           </Box>
 
           <Typography variant="h5" sx={{ fontWeight: 700, color: "#1a202c", mb: 2 }}>
@@ -120,14 +206,13 @@ function ProductDetailPage() {
             {product.description}
           </Typography>
 
-
           <Paper
             elevation={0}
             sx={{
               p: 3,
               borderRadius: 2,
               border: "1px solid #e2e8f0",
-              maxWidth: 400
+              maxWidth: 400,
             }}
           >
             <Typography sx={{ fontWeight: 600, color: "#1a202c", mb: 2 }}>
@@ -146,7 +231,7 @@ function ProductDetailPage() {
                     borderRadius: "8px 0 0 8px",
                     borderRight: "none",
                     width: 40,
-                    height: 40
+                    height: 40,
                   }}
                 >
                   <Remove fontSize="small" />
@@ -161,8 +246,8 @@ function ProductDetailPage() {
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 0,
                       height: 40,
-                      "& fieldset": { borderColor: "#e2e8f0" }
-                    }
+                      "& fieldset": { borderColor: "#e2e8f0" },
+                    },
                   }}
                 />
                 <IconButton
@@ -172,7 +257,7 @@ function ProductDetailPage() {
                     borderRadius: "0 8px 8px 0",
                     borderLeft: "none",
                     width: 40,
-                    height: 40
+                    height: 40,
                   }}
                 >
                   <Add fontSize="small" />
@@ -184,7 +269,6 @@ function ProductDetailPage() {
               </Box>
             </Box>
 
-            {/* Product Status */}
             <Typography sx={{ fontSize: "0.875rem", color: "#4a5568", mb: 1 }}>
               Product Status
             </Typography>
@@ -193,28 +277,29 @@ function ProductDetailPage() {
                 checked={active}
                 onChange={(e) => setActive(e.target.checked)}
                 sx={{
-                  "& .MuiSwitch-switchBase.Mui-checked": { color: "#38a89d" },
-                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": { backgroundColor: "#38a89d" }
+                  "& .MuiSwitch-switchBase.Mui-checked": { color: "#425bdb" },
+                  "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                    backgroundColor: "#425bdb",
+                  },
                 }}
               />
-              <Typography sx={{ color: active ? "#38a89d" : "#718096", fontWeight: 500 }}>
+              <Typography sx={{ color: active ? "#425bdb" : "#718096", fontWeight: 500 }}>
                 {active ? "Active" : "Inactive"}
               </Typography>
             </Box>
 
-            {/* Save Button */}
             <Button
               fullWidth
               variant="contained"
               startIcon={<Save />}
-              onClick={handleSubmit}
+              onClick={handleSaveClick}
               sx={{
-                backgroundColor: "#38a89d",
+                backgroundColor: "#5e73db",
                 textTransform: "none",
                 py: 1.5,
                 borderRadius: 2,
                 fontWeight: 600,
-                "&:hover": { backgroundColor: "#2c7a7b" }
+                "&:hover": { backgroundColor: "#425bdb" },
               }}
             >
               Save Changes
@@ -223,12 +308,28 @@ function ProductDetailPage() {
         </Box>
       </Box>
 
+
+      <ConfirmationDialog
+        open={confirmOpen}
+        onClose={handleCloseConfirmDialog}
+        onConfirm={handleConfirmSave}
+        title="Confirm Changes"
+        message={getConfirmationMessage()}
+        confirmText="Save Changes"
+        confirmColor="primary"
+        loading={saving}
+      />
+
+
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity={snackbar.severity}>{snackbar.message}</Alert>
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+          {snackbar.message}
+        </Alert>
       </Snackbar>
     </Box>
   );
