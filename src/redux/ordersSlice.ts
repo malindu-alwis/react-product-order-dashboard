@@ -8,22 +8,50 @@ interface OrdersState {
   error: string | null;
 }
 
-const initialState: OrdersState = { items: [], loading: false, error: null };
+const initialState: OrdersState = {
+  items: [],
+  loading: false,
+  error: null,
+};
+
 
 export const fetchOrders = createAsyncThunk("orders/fetch", async () => {
   return await ordersService.getOrders();
 });
 
+
+export const updateOrderStatus = createAsyncThunk(
+  "orders/updateStatus",
+  async ({ id, status }: { id: number; status: string }) => {
+    return await ordersService.updateOrder(id, { status });
+  }
+);
+
 const ordersSlice = createSlice({
   name: "orders",
   initialState,
   reducers: {},
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(fetchOrders.pending, state => { state.loading = true; state.error = null; })
-      .addCase(fetchOrders.fulfilled, (state, action) => { state.loading = false; state.items = action.payload; })
-      .addCase(fetchOrders.rejected, (state, action) => { state.loading = false; state.error = action.error.message || "Error"; });
-  }
+      .addCase(fetchOrders.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload;
+      })
+      .addCase(fetchOrders.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Error fetching orders";
+      })
+      .addCase(updateOrderStatus.fulfilled, (state, action) => {
+        const index = state.items.findIndex((o) => o.id === action.meta.arg.id);
+        if (index !== -1) {
+          state.items[index].status = action.meta.arg.status;
+        }
+      });
+  },
 });
 
 export default ordersSlice.reducer;

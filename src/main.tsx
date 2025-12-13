@@ -1,22 +1,30 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import App from "./App";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
-import { store } from './redux/store.ts';
+import { store } from "./redux/store";
+import { ColorModeProvider } from "./theme/ColorModeContext";
 
+async function enableMocking() {
+  if (!import.meta.env.DEV) return;
 
-if (import.meta.env.DEV) {
-  const { worker } = await import("./mocks/browser.ts");
-  worker.start();
+  const { worker } = await import("./mocks/browser");
+  await worker.start({
+    onUnhandledRequest: "bypass",
+  });
 }
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Provider store={store}>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
-    </Provider>
-  </StrictMode>,
-)
+enableMocking().then(() => {
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <Provider store={store}>
+        <ColorModeProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </ColorModeProvider>
+      </Provider>
+    </StrictMode>
+  );
+});

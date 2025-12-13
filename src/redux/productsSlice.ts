@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import type { Product } from "../types/Product";
 import * as productsService from "../services/productsService";
 
@@ -8,33 +8,60 @@ interface ProductsState {
   error: string | null;
 }
 
-const initialState: ProductsState = { items: [], loading: false, error: null };
+const initialState: ProductsState = {
+  items: [],
+  loading: false,
+  error: null,
+};
 
-export const fetchProducts = createAsyncThunk("products/fetch", async () => {
-  return await productsService.getProducts();
-});
-
-export const updateProductStock = createAsyncThunk(
-  "products/updateStock",
-  async ({ id, stock }: { id: number; stock: number }) => {
-    return await productsService.updateProduct(id, { stock });
+export const fetchProducts = createAsyncThunk(
+  "products/fetchAll",
+  async (filters?: { name?: string; category?: string; minPrice?: number; maxPrice?: number }) => {
+    return await productsService.getProducts(filters);
   }
 );
 
-const productsSlice = createSlice({
+export const fetchProductById = createAsyncThunk(
+  "products/fetchById",
+  async (id: number) => {
+    return await productsService.getProductById(id);
+  }
+);
+
+export const updateProductStockOrStatus = createAsyncThunk(
+  "products/update",
+  async ({ id, data }: { id: number; data: Partial<Product> }) => {
+    return await productsService.updateProduct(id, data);
+  }
+);
+
+const productSlice = createSlice({
   name: "products",
   initialState,
   reducers: {},
-  extraReducers: builder => {
-    builder
-      .addCase(fetchProducts.pending, state => { state.loading = true; state.error = null; })
-      .addCase(fetchProducts.fulfilled, (state, action) => { state.loading = false; state.items = action.payload; })
-      .addCase(fetchProducts.rejected, (state, action) => { state.loading = false; state.error = action.error.message || "Error"; })
-      .addCase(updateProductStock.fulfilled, (state, action) => {
-        const index = state.items.findIndex(p => p.id === action.payload.id);
-        if (index >= 0) state.items[index] = action.payload;
-      });
-  }
+  extraReducers: (builder) => {
+    // Fetch all
+    builder.addCase(fetchProducts.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    });
+    builder.addCase(fetchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+      console.log(action.payload);
+      
+      state.items = action.payload;
+      state.loading = false;
+    });
+    builder.addCase(fetchProducts.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || "Error fetching products";
+    });
+
+    // Update product
+    builder.addCase(updateProductStockOrStatus.fulfilled, (state, action: PayloadAction<Product>) => {
+      const index = state.items.findIndex(p => p.id === action.payload.id);
+      if (index !== -1) state.items[index] = action.payload;
+    });
+  },
 });
 
-export default productsSlice.reducer;
+export default productSlice.reducer;
